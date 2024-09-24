@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>C Operator Priorities</title>
+    <style>
+        #container {
+            display: flex;
+            flex-wrap: nowrap;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-x: auto;
+            width: 90%;
+        }
+        .rectangle {
+            min-width: 120px;
+            height: 50px;
+            border: 1px solid #000;
+            margin: 5px;
+            line-height: 50px;
+            text-align: center;
+            cursor: move;
+            background-color: #f0f0f0;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .dragging {
+            opacity: 0.5;
+        }
+        .over {
+            border: 2px dashed #000;
+        }
+        #checkButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        #result {
+            width: 90%;
+            margin: 0 auto;
+            font-size: 18px;
+        }
+        .incorrect {
+            background-color: #ffcccc;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Arrange the C Operators by Priority</h1>
+    <div id="container">
+        <!-- Rectangles will be inserted here -->
+    </div>
+    <button id="checkButton">CHECK</button>
+    <div id="result"></div>
+    <script>
+        var operators = [
+            {symbol: '-', description: 'Vorzeichen', display: 'Vorzeichen (-)', priority: 15},
+            {symbol: '++', description: 'Inkrement', display: '++', priority: 16},
+            {symbol: '--', description: 'Dekrement', display: '--', priority: 16},
+            {symbol: '*', description: 'Multiplikation', display: 'Multiplikation (*)', priority: 13},
+            {symbol: '/', description: 'Division', display: '/', priority: 13},
+            {symbol: '%', description: 'Modulo', display: '%', priority: 13},
+            {symbol: '+', description: 'Addition', display: '+', priority: 12},
+            {symbol: '-', description: 'Subtraktion', display: 'Subtraktion (-)', priority: 12},
+            {symbol: '=', description: 'Zuweisung', display: '=', priority: 2},
+            {symbol: 'op=', description: 'Zusammengesetzte Zuweisung', display: 'op=', priority: 2},
+            {symbol: '()', description: 'Klammer', display: '()', priority: 16},
+            {symbol: '<', description: 'Kleiner', display: '<', priority: 10},
+            {symbol: '<=', description: 'Kleiner gleich', display: '<=', priority: 10},
+            {symbol: '>', description: 'Größer', display: '>', priority: 10},
+            {symbol: '>=', description: 'Größer gleich', display: '>=', priority: 10},
+            {symbol: '==', description: 'Gleich', display: '==', priority: 9},
+            {symbol: '!=', description: 'Ungleich', display: '!=', priority: 9},
+            {symbol: '!', description: 'NICHT (Boolesche Algebra)', display: '!', priority: 15},
+            {symbol: '&&', description: 'UND (Boolesche Algebra)', display: '&&', priority: 5},
+            {symbol: '||', description: 'ODER (Boolesche Algebra)', display: '||', priority: 4},
+            {symbol: '~', description: 'NICHT (bitweise)', display: '~', priority: 15},
+            {symbol: '&', description: 'UND (bitweise)', display: '& (bitweise)', priority: 8},
+            {symbol: '^', description: 'Exklusiv ODER (bitweise)', display: '^', priority: 7},
+            {symbol: '|', description: 'ODER (bitweise)', display: '|', priority: 6},
+            {symbol: '<<', description: 'Linksschieben', display: '<<', priority: 11},
+            {symbol: '>>', description: 'Rechtsschieben', display: '>>', priority: 11},
+            {symbol: '[]', description: 'Feldindex', display: '[]', priority: 16},
+            {symbol: '->', description: 'Zeiger auf Struktur', display: '->', priority: 16},
+            {symbol: '.', description: 'Strukturelement', display: '.', priority: 16},
+            {symbol: '&', description: 'Adresse', display: '& (Adresse)', priority: 15},
+            {symbol: ',', description: 'Trennung', display: ',', priority: 1},
+            {symbol: '?:', description: 'Auswahl', display: '?:', priority: 3},
+            {symbol: '(Datentyp)', description: 'Typumwandlung', display: '(Datentyp)', priority: 14},
+            {symbol: '*', description: 'Zeiger De-Referenzierung', display: 'De-Referenzierung (*)', priority: 15},
+            {symbol: 'sizeof()', description: 'Datentyp-Größe bestimmen', display: 'sizeof()', priority: 15}
+        ];
+
+        // Shuffle the operators array
+        operators = operators.sort(() => Math.random() - 0.5);
+
+        var container = document.getElementById('container');
+
+        operators.forEach(function(op, index) {
+            var rect = document.createElement('div');
+            rect.className = 'rectangle';
+            rect.draggable = true;
+            rect.innerText = op.display;
+            rect.dataset.priority = op.priority;
+            rect.dataset.index = index;
+            container.appendChild(rect);
+
+            // Add event listeners for drag and drop
+            rect.addEventListener('dragstart', dragStart);
+            rect.addEventListener('dragover', dragOver);
+            rect.addEventListener('drop', drop);
+            rect.addEventListener('dragenter', dragEnter);
+            rect.addEventListener('dragleave', dragLeave);
+            rect.addEventListener('dragend', dragEnd);
+        });
+
+        var dragSrcEl = null;
+
+        function dragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+            this.classList.add('dragging');
+        }
+
+        function dragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault(); // Necessary. Allows us to drop.
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function dragEnter(e) {
+            this.classList.add('over');
+        }
+
+        function dragLeave(e) {
+            this.classList.remove('over');
+        }
+
+        function drop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation(); // Stops some browsers from redirecting.
+            }
+            if (dragSrcEl != this) {
+                // Swap the elements
+                var parent = this.parentNode;
+                var draggedIndex = Array.prototype.indexOf.call(parent.children, dragSrcEl);
+                var droppedIndex = Array.prototype.indexOf.call(parent.children, this);
+
+                if (draggedIndex < droppedIndex) {
+                    parent.insertBefore(dragSrcEl, this.nextSibling);
+                } else {
+                    parent.insertBefore(dragSrcEl, this);
+                }
+            }
+            return false;
+        }
+
+        function dragEnd(e) {
+            var rects = document.querySelectorAll('.rectangle');
+            rects.forEach(function(rect) {
+                rect.classList.remove('over');
+                rect.classList.remove('dragging');
+            });
+        }
+
+        document.getElementById('checkButton').addEventListener('click', function() {
+            var rects = document.querySelectorAll('.rectangle');
+            var isCorrect = true;
+
+            rects.forEach(function(rect) {
+                rect.classList.remove('incorrect');
+            });
+
+            for (var i = 0; i < rects.length - 1; i++) {
+                var priorityCurrent = parseFloat(rects[i].dataset.priority);
+                var priorityNext = parseFloat(rects[i + 1].dataset.priority);
+
+                if (priorityCurrent < priorityNext) {
+                    isCorrect = false;
+                    rects[i + 1].classList.add('incorrect');
+                }
+            }
+
+            var resultDiv = document.getElementById('result');
+            if (isCorrect) {
+                resultDiv.innerHTML = '<p style="color:green;">Congratulations! You arranged the operators correctly.</p>';
+            } else {
+                resultDiv.innerHTML = '<p style="color:red;">Some operators are not in the correct order. Incorrect operators are highlighted in red.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
